@@ -1,0 +1,29 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7f8fb"/>
+      <stop offset="0.55" stop-color="#c9d0dd"/>
+      <stop offset="1" stop-color="#9aa4b5"/>
+    </linearGradient>
+    <linearGradient id="metal2" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#eff2f8"/>
+      <stop offset="1" stop-color="#b3bccb"/>
+    </linearGradient>
+    <radialGradient id="inner" cx="50%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#c5ccda"/>
+    </radialGradient>
+  </defs>
+
+  <polygon points="60,10 140,10 190,60 190,140 140,190 60,190 10,140 10,60" fill="url(#metal)" stroke="#8f99aa" stroke-width="3"/>
+  <polygon points="66,22 134,22 178,66 178,134 134,178 66,178 22,134 22,66" fill="url(#metal2)" opacity="0.9"/>
+  <circle cx="100" cy="100" r="70" fill="url(#inner)" opacity="0.9"/>
+
+  <polygon points="100,44 148,72 148,128 100,156 52,128 52,72" fill="none" stroke="#7e889a" stroke-width="4" opacity="0.9"/>
+  <g opacity="0.95" transform="translate(100 100) scale(0.045) translate(-1250 -1250)">
+    <path fill="#6c7688" d="M1435,1440l-121,332c-3,9-3,19,0,29l208,571l241-139l-289-793C1467,1422,1442,1422,1435,1440z"/>
+    <path fill="#6c7688" d="M1678,882c-7-18-32-18-39,0l-121,332c-3,9-3,19,0,29l341,935l241-139L1678,883V882z"/>
+    <path fill="#6c7688" d="M1172,644H939c-17,0-33,11-39,27L401,2039l241,139l550-1507c5-14-5-28-19-28L1172,644z"/>
+    <path fill="#6c7688" d="M1580,644h-233c-17,0-33,11-39,27L738,2233l241,139l620-1701c5-14-5-28-19-28V644z"/>
+  </g>
+</svg>

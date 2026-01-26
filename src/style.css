@@ -14,6 +14,50 @@ body {
   place-items: center;
 }
 
+.fx-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.win-banner {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  z-index: 11;
+  opacity: 0;
+  pointer-events: none;
+  padding: 18px 26px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(20, 26, 46, 0.55);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.win-banner.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.win-banner span {
+  display: inline-block;
+  font-weight: 900;
+  font-size: 52px;
+  letter-spacing: 1.5px;
+  line-height: 1;
+  background: linear-gradient(180deg, #fef08a 0%, #fbbf24 45%, #fb7185 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+
 #app {
   width: min(680px, 92vw);
   padding: 24px 16px 40px;
