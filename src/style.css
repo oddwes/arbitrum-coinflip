@@ -47,6 +47,13 @@ body {
   letter-spacing: 0.2px;
 }
 
+.wallet-hint {
+  font-size: 12px;
+  opacity: 0.85;
+  text-align: right;
+  max-width: 320px;
+}
+
 .wallet-status button {
   min-width: unset;
   padding: 8px 10px;

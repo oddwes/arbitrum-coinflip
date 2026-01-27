@@ -6,7 +6,7 @@ import headsUrl from '/coin-heads.svg'
 import tailsUrl from '/coin-tails.svg'
 import { arbitrum } from 'wagmi/chains'
 import { connect, disconnect, getAccount, switchChain, watchAccount } from 'wagmi/actions'
-import { injectedConnector, shouldAutoConnectUnicornFromUrl, unicorn, wagmiConfig } from './wallet'
+import { injectedConnector, isUnicornConfigured, shouldAutoConnectUnicornFromUrl, unicorn, wagmiConfig } from './wallet'
 
 const app = document.querySelector<HTMLDivElement>('#app')
 if (!app) throw new Error('Missing #app')
@@ -18,6 +18,7 @@ wallet.innerHTML = `
     <span class="wallet-label">Arbitrum</span>
     <span id="wallet-address" class="wallet-address">Not connected</span>
   </div>
+  <div id="wallet-hint" class="wallet-hint" hidden></div>
   <div class="wallet-row">
     <button id="wallet-connect" type="button">Connect</button>
     <button id="wallet-switch" type="button" hidden>Switch</button>
@@ -27,6 +28,7 @@ wallet.innerHTML = `
 document.body.appendChild(wallet)
 
 const walletAddress = wallet.querySelector<HTMLSpanElement>('#wallet-address')!
+const walletHint = wallet.querySelector<HTMLDivElement>('#wallet-hint')!
 const walletConnect = wallet.querySelector<HTMLButtonElement>('#wallet-connect')!
 const walletSwitch = wallet.querySelector<HTMLButtonElement>('#wallet-switch')!
 const walletDisconnect = wallet.querySelector<HTMLButtonElement>('#wallet-disconnect')!
@@ -54,10 +56,20 @@ async function maybeAutoConnect() {
   const account = getAccount(wagmiConfig)
   if (account.status === 'connected') return
   try {
+    walletHint.hidden = false
+    walletHint.textContent = 'Auto-connecting…'
     await connect(wagmiConfig, { connector: unicorn, chainId: arbitrum.id })
+    walletHint.hidden = true
+    walletHint.textContent = ''
   } catch {
-    // ignore
+    walletHint.hidden = false
+    walletHint.textContent = 'Auto-connect failed. Click Connect.'
   }
+}
+
+if (shouldAutoConnectUnicornFromUrl() && !isUnicornConfigured()) {
+  walletHint.hidden = false
+  walletHint.textContent = 'Missing VITE_THIRDWEB_CLIENT_ID / VITE_THIRDWEB_FACTORY_ADDRESS.'
 }
 void maybeAutoConnect()
 

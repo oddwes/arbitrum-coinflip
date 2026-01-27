@@ -28,6 +28,10 @@ export const wagmiConfig = createConfig({
 
 export function shouldAutoConnectUnicornFromUrl() {
   const url = new URL(window.location.href)
-  return url.searchParams.has('walletId') && url.searchParams.has('authCookie')
+  return url.searchParams.get('walletId') === 'inApp' && !!url.searchParams.get('authCookie')
+}
+
+export function isUnicornConfigured() {
+  return !!unicorn
 }
 
