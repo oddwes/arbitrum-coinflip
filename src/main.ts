@@ -4,9 +4,89 @@ type Side = 'heads' | 'tails'
 
 import headsUrl from '/coin-heads.svg'
 import tailsUrl from '/coin-tails.svg'
+import { arbitrum } from 'wagmi/chains'
+import { connect, disconnect, getAccount, switchChain, watchAccount } from 'wagmi/actions'
+import { injectedConnector, shouldAutoConnectUnicornFromUrl, unicorn, wagmiConfig } from './wallet'
 
 const app = document.querySelector<HTMLDivElement>('#app')
 if (!app) throw new Error('Missing #app')
+
+const wallet = document.createElement('div')
+wallet.className = 'wallet-status'
+wallet.innerHTML = `
+  <div class="wallet-row">
+    <span class="wallet-label">Arbitrum</span>
+    <span id="wallet-address" class="wallet-address">Not connected</span>
+  </div>
+  <div class="wallet-row">
+    <button id="wallet-connect" type="button">Connect</button>
+    <button id="wallet-switch" type="button" hidden>Switch</button>
+    <button id="wallet-disconnect" type="button" hidden>Disconnect</button>
+  </div>
+`
+document.body.appendChild(wallet)
+
+const walletAddress = wallet.querySelector<HTMLSpanElement>('#wallet-address')!
+const walletConnect = wallet.querySelector<HTMLButtonElement>('#wallet-connect')!
+const walletSwitch = wallet.querySelector<HTMLButtonElement>('#wallet-switch')!
+const walletDisconnect = wallet.querySelector<HTMLButtonElement>('#wallet-disconnect')!
+
+const shortAddr = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`
+
+function renderWallet() {
+  const account = getAccount(wagmiConfig)
+  const isConnected = account.status === 'connected' && !!account.address
+  walletAddress.textContent = isConnected ? shortAddr(account.address) : 'Not connected'
+  walletConnect.hidden = isConnected
+  walletDisconnect.hidden = !isConnected
+
+  const needsSwitch = isConnected && account.chainId !== arbitrum.id
+  walletSwitch.hidden = !needsSwitch
+}
+
+watchAccount(wagmiConfig, {
+  onChange: renderWallet,
+})
+renderWallet()
+
+async function maybeAutoConnect() {
+  if (!shouldAutoConnectUnicornFromUrl() || !unicorn) return
+  const account = getAccount(wagmiConfig)
+  if (account.status === 'connected') return
+  try {
+    await connect(wagmiConfig, { connector: unicorn, chainId: arbitrum.id })
+  } catch {
+    // ignore
+  }
+}
+void maybeAutoConnect()
+
+walletConnect.addEventListener('click', async () => {
+  try {
+    await connect(wagmiConfig, {
+      connector: shouldAutoConnectUnicornFromUrl() && unicorn ? unicorn : injectedConnector,
+      chainId: arbitrum.id,
+    })
+  } catch {
+    // ignore
+  }
+})
+
+walletSwitch.addEventListener('click', async () => {
+  try {
+    await switchChain(wagmiConfig, { chainId: arbitrum.id })
+  } catch {
+    // ignore
+  }
+})
+
+walletDisconnect.addEventListener('click', async () => {
+  try {
+    await disconnect(wagmiConfig)
+  } catch {
+    // ignore
+  }
+})
 
 app.innerHTML = `
   <main class="page">

@@ -14,6 +14,45 @@ body {
   place-items: center;
 }
 
+.wallet-status {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 12;
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(20, 26, 46, 0.55);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
+}
+
+.wallet-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.wallet-label {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.wallet-address {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.wallet-status button {
+  min-width: unset;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
 .fx-canvas {
   position: fixed;
   inset: 0;
