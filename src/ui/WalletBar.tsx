@@ -53,7 +53,7 @@ export function WalletBar() {
   return (
     <div className="wallet-status">
       <div className="wallet-row">
-        <span className="wallet-label">Arbitrum</span>
+        <span className="wallet-label">Address</span>
         <span className="wallet-address">{isConnected ? shortAddr(address) : 'Not connected'}</span>
       </div>
 

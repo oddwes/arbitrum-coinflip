@@ -1,6 +1,7 @@
 import React from 'react'
 import headsUrl from '/coin-heads.svg'
 import tailsUrl from '/coin-tails.svg'
+import { useAccount } from 'wagmi'
 
 type Side = 'heads' | 'tails'
 type Rocket = { x: number; y: number; vx: number; vy: number; color: string; exploded: boolean }
@@ -11,6 +12,8 @@ const sideAngle = (side: Side) => (side === 'heads' ? 0 : 180)
 const mod360 = (deg: number) => ((deg % 360) + 360) % 360
 
 export function CoinFlip() {
+  const { isConnected } = useAccount()
+  const [isFlipping, setIsFlipping] = React.useState(false)
   const coinRef = React.useRef<HTMLDivElement | null>(null)
   const winRef = React.useRef<HTMLDivElement | null>(null)
   const fxRef = React.useRef<HTMLCanvasElement | null>(null)
@@ -147,6 +150,7 @@ export function CoinFlip() {
     if (flippingRef.current) return
 
     flippingRef.current = true
+    setIsFlipping(true)
 
     const durationMs = 1500 + Math.random() * 500
     const result: Side = Math.random() < 0.5 ? 'heads' : 'tails'
@@ -169,6 +173,7 @@ export function CoinFlip() {
       coin.setAttribute('aria-label', `Coin result: ${result}`)
       coin.classList.remove('is-flipping')
       flippingRef.current = false
+      setIsFlipping(false)
       if (result === guess) startFireworksRef.current?.()
     }, durationMs + 40)
   }
@@ -196,10 +201,15 @@ export function CoinFlip() {
         </div>
 
         <div className="controls">
-          <button type="button" onClick={() => flip('heads')}>
+          <button
+            type="button"
+            onClick={() => flip('heads')}
+            disabled={!isConnected || isFlipping}
+            style={{ background: '#2563eb', color: '#fff' }}
+          >
             Heads
           </button>
-          <button type="button" onClick={() => flip('tails')}>
+          <button type="button" onClick={() => flip('tails')} disabled={!isConnected || isFlipping}>
             Tails
           </button>
         </div>
