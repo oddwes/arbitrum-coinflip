@@ -3,17 +3,17 @@ import { createConfig, http } from 'wagmi'
 import { arbitrum } from 'wagmi/chains'
 import { injected } from 'wagmi/connectors'
 
-const thirdwebClientId = import.meta.env.VITE_THIRDWEB_CLIENT_ID as string | undefined
-const thirdwebFactoryAddress = import.meta.env.VITE_THIRDWEB_FACTORY_ADDRESS as
+export const unicornClientId = import.meta.env.VITE_THIRDWEB_CLIENT_ID as string | undefined
+export const unicornFactoryAddress = import.meta.env.VITE_THIRDWEB_FACTORY_ADDRESS as
   | `0x${string}`
   | undefined
 
 export const injectedConnector = injected()
 
-export const unicorn = thirdwebClientId && thirdwebFactoryAddress
+export const unicorn = unicornClientId && unicornFactoryAddress
   ? unicornConnector({
-      clientId: thirdwebClientId,
-      factoryAddress: thirdwebFactoryAddress,
+      clientId: unicornClientId,
+      factoryAddress: unicornFactoryAddress,
       defaultChain: arbitrum.id,
     })
   : undefined
