@@ -1,11 +1,11 @@
 import { CoinFlip } from './CoinFlip'
 import { WalletBar } from './WalletBar'
-import { UnicornAutoConnect } from '@unicorn.eth/autoconnect'
+import { UnicornAutoConnectForce } from './UnicornAutoConnectForce'
 
 export function App() {
   return (
     <>
-      <UnicornAutoConnect debug={true} />
+      <UnicornAutoConnectForce debug={true} />
       <WalletBar />
       <CoinFlip />
     </>
