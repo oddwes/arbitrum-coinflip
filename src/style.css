@@ -132,7 +132,7 @@ body {
 }
 
 .coin {
-  --size: min(320px, 62vmin);
+  --size: min(640px, 124vmin);
   --thickness: 18px;
   width: var(--size);
   height: var(--size);

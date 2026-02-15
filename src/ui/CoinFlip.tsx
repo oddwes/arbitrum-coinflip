@@ -5,8 +5,8 @@ type Side = 'heads' | 'tails'
 type Rocket = { x: number; y: number; vx: number; vy: number; color: string; exploded: boolean }
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string }
 
-const headsUrl = '/coin-heads.svg'
-const tailsUrl = '/coin-tails.svg'
+const headsUrl = '/coin-heads.png'
+const tailsUrl = '/coin-tails.png'
 const colors = ['#60a5fa', '#a78bfa', '#34d399', '#fbbf24', '#f472b6']
 const sideAngle = (side: Side) => (side === 'heads' ? 0 : 180)
 const mod360 = (deg: number) => ((deg % 360) + 360) % 360
