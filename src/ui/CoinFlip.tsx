@@ -1,12 +1,12 @@
 import React from 'react'
-import headsUrl from '/coin-heads.svg'
-import tailsUrl from '/coin-tails.svg'
 import { useAccount } from 'wagmi'
 
 type Side = 'heads' | 'tails'
 type Rocket = { x: number; y: number; vx: number; vy: number; color: string; exploded: boolean }
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string }
 
+const headsUrl = '/coin-heads.svg'
+const tailsUrl = '/coin-tails.svg'
 const colors = ['#60a5fa', '#a78bfa', '#34d399', '#fbbf24', '#f472b6']
 const sideAngle = (side: Side) => (side === 'heads' ? 0 : 180)
 const mod360 = (deg: number) => ((deg % 360) + 360) % 360
@@ -14,6 +14,7 @@ const mod360 = (deg: number) => ((deg % 360) + 360) % 360
 export function CoinFlip() {
   const { isConnected } = useAccount()
   const [isFlipping, setIsFlipping] = React.useState(false)
+  const [isMounted, setIsMounted] = React.useState(false)
   const coinRef = React.useRef<HTMLDivElement | null>(null)
   const winRef = React.useRef<HTMLDivElement | null>(null)
   const fxRef = React.useRef<HTMLCanvasElement | null>(null)
@@ -22,6 +23,10 @@ export function CoinFlip() {
   const flippingRef = React.useRef(false)
 
   const startFireworksRef = React.useRef<(() => void) | null>(null)
+
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   React.useEffect(() => {
     const fx = fxRef.current
@@ -204,12 +209,16 @@ export function CoinFlip() {
           <button
             type="button"
             onClick={() => flip('heads')}
-            disabled={!isConnected || isFlipping}
+            disabled={!isMounted || !isConnected || isFlipping}
             style={{ background: '#2563eb', color: '#fff' }}
           >
             Heads
           </button>
-          <button type="button" onClick={() => flip('tails')} disabled={!isConnected || isFlipping}>
+          <button
+            type="button"
+            onClick={() => flip('tails')}
+            disabled={!isMounted || !isConnected || isFlipping}
+          >
             Tails
           </button>
         </div>

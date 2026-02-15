@@ -1,3 +1,5 @@
+'use client'
+
 import { CoinFlip } from './CoinFlip'
 import { WalletBar } from './WalletBar'
 import { UnicornAutoConnectForce } from './UnicornAutoConnectForce'
