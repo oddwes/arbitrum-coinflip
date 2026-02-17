@@ -1,0 +1,10 @@
+{
+  "name": "Silver Coin",
+  "description": "Reward for winning 2 coin flips",
+  "image": "ipfs://bafybeifwatv2qjqx636jvvgt6l7ye5sktisvuxizvms2bon7qv3sykxa2i",
+  "animation_url": "ipfs://bafybeifwatv2qjqx636jvvgt6l7ye5sktisvuxizvms2bon7qv3sykxa2i",
+  "attributes": [
+    { "trait_type": "Tier", "value": "Silver" }
+  ]
+}
+

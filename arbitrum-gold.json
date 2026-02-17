@@ -1,0 +1,9 @@
+{
+  "name": "Gold Coin",
+  "description": "Reward for winning 3 coin flips",
+  "image": "ipfs://bafybeig2nj4pyhpgavytfuyakzbbg6gsd4knocm3muxd6s6jm2symyfysa",
+  "animation_url": "ipfs://bafybeig2nj4pyhpgavytfuyakzbbg6gsd4knocm3muxd6s6jm2symyfysa",
+  "attributes": [
+    { "trait_type": "Tier", "value": "Gold" }
+  ]
+}

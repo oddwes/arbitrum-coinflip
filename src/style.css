@@ -112,6 +112,7 @@ body {
 .page {
   display: grid;
   justify-items: center;
+  align-content: center;
   gap: 18px;
 }
 
@@ -171,6 +172,99 @@ body {
 .controls {
   display: flex;
   gap: 12px;
+  align-items: center;
+}
+
+.mode-switch {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 12;
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(20, 26, 46, 0.55);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
+}
+
+.mode-switch button.active {
+  border-color: rgba(147, 197, 253, 0.8);
+  background: linear-gradient(180deg, rgba(66, 135, 245, 0.95), rgba(37, 99, 235, 0.9));
+}
+
+.streak-panel {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+}
+
+.streak-display {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  background: linear-gradient(180deg, rgba(44, 28, 8, 0.75), rgba(26, 19, 8, 0.88));
+  color: #fde68a;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: inset 0 0 16px rgba(251, 191, 36, 0.2), 0 0 22px rgba(251, 191, 36, 0.24);
+}
+
+.streak-display span {
+  line-height: 1;
+  color: #fff7cc;
+  font-size: 26px;
+  font-weight: 900;
+  margin-left: 8px;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.8), 0 0 18px rgba(251, 191, 36, 0.45);
+}
+
+.mint-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  padding-top: 40px;
+}
+
+.claim-status {
+  width: min(420px, 90vw);
+  display: grid;
+  gap: 8px;
+}
+
+.claim-progress {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+
+.claim-progress-bar {
+  height: 100%;
+  width: 45%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #60a5fa, #fbbf24);
+  animation: claim-loading 1200ms linear infinite;
+}
+
+@keyframes claim-loading {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(260%);
+  }
 }
 
 button {

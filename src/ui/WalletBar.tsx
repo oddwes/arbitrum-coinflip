@@ -17,7 +17,7 @@ export function WalletBar() {
 
   const hint =
     shouldAutoConnectUnicornFromUrl() && !isUnicornConfigured()
-      ? 'Missing VITE_THIRDWEB_CLIENT_ID / VITE_THIRDWEB_FACTORY_ADDRESS.'
+      ? 'Missing NEXT_PUBLIC_THIRDWEB_CLIENT_ID / NEXT_PUBLIC_THIRDWEB_FACTORY_ADDRESS.'
       : null
 
   const isConnected = status === 'connected' && !!address

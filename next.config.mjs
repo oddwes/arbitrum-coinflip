@@ -7,9 +7,9 @@ const wagmiEntry = require.resolve('wagmi')
 const nextConfig = {
   env: {
     NEXT_PUBLIC_THIRDWEB_CLIENT_ID:
-      process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID ?? process.env.VITE_THIRDWEB_CLIENT_ID,
+      process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID,
     NEXT_PUBLIC_THIRDWEB_FACTORY_ADDRESS:
-      process.env.NEXT_PUBLIC_THIRDWEB_FACTORY_ADDRESS ?? process.env.VITE_THIRDWEB_FACTORY_ADDRESS,
+      process.env.NEXT_PUBLIC_THIRDWEB_FACTORY_ADDRESS,
   },
   webpack: (config) => {
     config.resolve.alias = {
