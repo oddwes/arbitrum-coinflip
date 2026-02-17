@@ -83,6 +83,7 @@ export function CoinFlip() {
     if (!isConfirmed) return
     setClaimSuccess(true)
     setClaimError(null)
+    setWinStreak(0)
     void refetchSilverBalance()
     void refetchGoldBalance()
   }, [isConfirmed, refetchSilverBalance, refetchGoldBalance])
