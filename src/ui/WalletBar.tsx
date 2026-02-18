@@ -51,27 +51,41 @@ export function WalletBar() {
   }
 
   return (
-    <div className="wallet-status">
-      <div className="wallet-row">
-        <span className="wallet-label">Address</span>
-        <span className="wallet-address">{isConnected ? shortAddr(address) : 'Not connected'}</span>
+    <div className="fixed top-4 right-4 z-20 grid gap-2 rounded-[14px] border border-white/20 bg-slate-900/55 p-3 shadow-[0_16px_40px_rgba(0,0,0,0.32)] backdrop-blur-sm">
+      <div className="flex items-center justify-end gap-2.5">
+        <span className="text-xs opacity-[0.85]">Address</span>
+        <span className="font-mono text-sm font-bold tracking-wide">
+          {isConnected ? shortAddr(address) : 'Not connected'}
+        </span>
       </div>
 
-      {hint && <div className="wallet-hint">{hint}</div>}
+      {hint && <div className="max-w-80 text-right text-xs opacity-[0.85]">{hint}</div>}
 
-      <div className="wallet-row">
+      <div className="flex items-center justify-end gap-2.5">
         {!isConnected && (
-          <button type="button" onClick={onConnect}>
+          <button
+            type="button"
+            onClick={onConnect}
+            className="min-w-0 rounded-xl border border-white/20 bg-slate-900/65 px-2.5 py-2 text-[13px] font-semibold text-white/90 transition hover:border-white/35 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
+          >
             Connect
           </button>
         )}
         {needsSwitch && (
-          <button type="button" onClick={onSwitch}>
+          <button
+            type="button"
+            onClick={onSwitch}
+            className="min-w-0 rounded-xl border border-white/20 bg-slate-900/65 px-2.5 py-2 text-[13px] font-semibold text-white/90 transition hover:border-white/35 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
+          >
             Switch
           </button>
         )}
         {isConnected && (
-          <button type="button" onClick={onDisconnect}>
+          <button
+            type="button"
+            onClick={onDisconnect}
+            className="min-w-0 rounded-xl border border-white/20 bg-slate-900/65 px-2.5 py-2 text-[13px] font-semibold text-white/90 transition hover:border-white/35 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
+          >
             Disconnect
           </button>
         )}

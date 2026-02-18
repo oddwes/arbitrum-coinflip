@@ -44,6 +44,7 @@ export function CoinFlip() {
   const [isFlipping, setIsFlipping] = React.useState(false)
   const [isMounted, setIsMounted] = React.useState(false)
   const [winStreak, setWinStreak] = React.useState(0)
+  const [showWinBanner, setShowWinBanner] = React.useState(false)
   const coinRef = React.useRef<HTMLDivElement | null>(null)
   const winRef = React.useRef<HTMLDivElement | null>(null)
   const fxRef = React.useRef<HTMLCanvasElement | null>(null)
@@ -218,8 +219,19 @@ export function CoinFlip() {
 
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code !== 'Space') return
+      if (event.code !== 'Space' && event.code !== 'Enter') return
       event.preventDefault()
+      if (event.code === 'Enter') {
+        setShowWinBanner(true)
+        if (bannerTimeoutRef.current) {
+          window.clearTimeout(bannerTimeoutRef.current)
+        }
+        bannerTimeoutRef.current = window.setTimeout(() => {
+          setShowWinBanner(false)
+          bannerTimeoutRef.current = null
+        }, 900)
+        return
+      }
       startFireworksRef.current?.()
     }
 
@@ -270,8 +282,17 @@ export function CoinFlip() {
       setIsFlipping(false)
       if (result === guess) {
         playWinSound()
+        setShowWinBanner(true)
+        if (bannerTimeoutRef.current) {
+          window.clearTimeout(bannerTimeoutRef.current)
+        }
+        bannerTimeoutRef.current = window.setTimeout(() => {
+          setShowWinBanner(false)
+          bannerTimeoutRef.current = null
+        }, 900)
         setWinStreak((prev) => prev + 1)
       } else {
+        setShowWinBanner(false)
         setWinStreak(0)
       }
     }
@@ -317,7 +338,7 @@ export function CoinFlip() {
 
   return (
     <>
-      <main className="page">
+      <main className="grid content-center justify-items-center gap-4">
         <div className="coin-scene">
           <div className="coin-shadow">
             <div
@@ -337,12 +358,12 @@ export function CoinFlip() {
           </div>
         </div>
 
-        <div className="controls">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => flip('heads')}
             disabled={!isMounted || !isConnected || isFlipping}
-            style={{ background: '#2563eb', color: '#fff' }}
+            className="min-w-[140px] rounded-xl border border-blue-300/60 bg-gradient-to-b from-blue-500/95 to-blue-600/90 px-5 py-3.5 text-base font-semibold tracking-wide text-white transition hover:border-blue-200/80 disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
           >
             Heads
           </button>
@@ -350,20 +371,27 @@ export function CoinFlip() {
             type="button"
             onClick={() => flip('tails')}
             disabled={!isMounted || !isConnected || isFlipping}
+            className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
           >
             Tails
           </button>
         </div>
 
-        <div className="streak-panel">
-          <div className="streak-display">Streak: <span>{winStreak}</span></div>
-          {!tierAccessAddress && <div>Set NEXT_PUBLIC_TIER_ACCESS_CONTRACT to enable minting.</div>}
-          {!!tierAccessAddress && chainId !== arbitrum.id && <div>Switch to Arbitrum to mint.</div>}
-          <div className="mint-actions">
+        <div className="grid justify-items-center gap-2 text-center">
+          <div className="inline-flex items-center rounded-full border border-amber-300/50 bg-gradient-to-b from-amber-900/60 to-amber-950/80 px-4 py-2 text-sm font-bold tracking-[0.08em] text-amber-200 uppercase shadow-[inset_0_0_16px_rgba(251,191,36,0.2),0_0_22px_rgba(251,191,36,0.24)]">
+            Streak:
+            <span className="ml-2 text-2xl leading-none font-black tracking-[0.04em] text-amber-50 [text-shadow:0_0_8px_rgba(251,191,36,0.8),0_0_18px_rgba(251,191,36,0.45)]">
+              {winStreak}
+            </span>
+          </div>
+          {!tierAccessAddress && <div className="text-sm text-white/85">Set NEXT_PUBLIC_TIER_ACCESS_CONTRACT to enable minting.</div>}
+          {!!tierAccessAddress && chainId !== arbitrum.id && <div className="text-sm text-white/85">Switch to Arbitrum to mint.</div>}
+          <div className="flex flex-wrap items-end justify-center gap-2.5 pt-10">
             {hasSilver ? (
               <button
                 type="button"
                 onClick={() => window.open(openSeaUrlFor(SILVER_TOKEN_ID), '_blank', 'noopener,noreferrer')}
+                className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
               >
                 View Silver on OpenSea
               </button>
@@ -372,6 +400,7 @@ export function CoinFlip() {
                 type="button"
                 onClick={() => void mintTier(SILVER_TOKEN_ID)}
                 disabled={!canMint || !canMintSilver || isMinting || isConfirming}
+                className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
               >
                 Mint Silver (2 wins)
               </button>
@@ -380,6 +409,7 @@ export function CoinFlip() {
               <button
                 type="button"
                 onClick={() => window.open(openSeaUrlFor(GOLD_TOKEN_ID), '_blank', 'noopener,noreferrer')}
+                className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
               >
                 View Gold on OpenSea
               </button>
@@ -388,20 +418,21 @@ export function CoinFlip() {
                 type="button"
                 onClick={() => void mintTier(GOLD_TOKEN_ID)}
                 disabled={!canMint || !canMintGold || isMinting || isConfirming}
+                className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
               >
                 Mint Gold (3 wins)
               </button>
             )}
           </div>
           {(isMinting || isConfirming || claimSuccess || claimError) && (
-            <div className="claim-status">
-              {isMinting && <div>Confirm claim in wallet...</div>}
-              {isConfirming && <div>Claim submitted. Waiting for confirmation...</div>}
-              {claimSuccess && !isMinting && !isConfirming && <div>Claimed!</div>}
-              {claimError && !isMinting && !isConfirming && <div>Claim failed. Try again.</div>}
+            <div className="grid w-[min(420px,90vw)] gap-2">
+              {isMinting && <div className="text-sm text-white/90">Confirm claim in wallet...</div>}
+              {isConfirming && <div className="text-sm text-white/90">Claim submitted. Waiting for confirmation...</div>}
+              {claimSuccess && !isMinting && !isConfirming && <div className="text-sm text-emerald-300">Claimed!</div>}
+              {claimError && !isMinting && !isConfirming && <div className="text-sm text-rose-300">Claim failed. Try again.</div>}
               {(isMinting || isConfirming) && (
-                <div className="claim-progress">
-                  <div className="claim-progress-bar" />
+                <div className="h-2 w-full overflow-hidden rounded-full bg-white/15">
+                  <div className="claim-progress-bar h-full w-[45%] rounded-full bg-gradient-to-r from-blue-400 to-amber-400" />
                 </div>
               )}
             </div>
@@ -409,10 +440,22 @@ export function CoinFlip() {
         </div>
       </main>
 
-      <div ref={winRef} className="win-banner" aria-hidden="true">
-        <span>CLAIMED!</span>
+      <div
+        className={`guess-win-banner pointer-events-none fixed top-20 left-1/2 z-20 rounded-2xl border border-emerald-200/40 bg-emerald-500/20 px-6 py-3 text-4xl font-black tracking-[2px] text-emerald-200 shadow-[0_14px_40px_rgba(0,0,0,0.35)] backdrop-blur-sm ${showWinBanner ? 'is-visible' : ''}`}
+        aria-hidden="true"
+      >
+        WIN!
       </div>
-      <canvas ref={fxRef} className="fx-canvas" aria-hidden="true" />
+      <div
+        ref={winRef}
+        className="win-banner pointer-events-none fixed top-1/2 left-1/2 z-20 rounded-[20px] border border-white/20 bg-slate-900/55 px-8 py-6 shadow-[0_16px_40px_rgba(0,0,0,0.35)] backdrop-blur-sm"
+        aria-hidden="true"
+      >
+        <span className="inline-block bg-gradient-to-b from-yellow-200 via-amber-400 to-rose-400 bg-clip-text text-[clamp(56px,10vw,108px)] leading-none font-black tracking-[2px] text-transparent [text-shadow:0_1px_0_rgba(0,0,0,0.15)]">
+          CLAIMED!
+        </span>
+      </div>
+      <canvas ref={fxRef} className="pointer-events-none fixed inset-0 z-10 h-screen w-screen" aria-hidden="true" />
     </>
   )
 }
