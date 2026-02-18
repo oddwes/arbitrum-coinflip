@@ -394,9 +394,9 @@ export function CoinFlip() {
     }, durationMs + 120)
   }
 
-  const canMint = !!isConnected && !!address && chainId === arbitrum.id && !!tierAccessAddress
-  const hasSilver = (silverBalance ?? 0n) > 0n
-  const hasGold = (goldBalance ?? 0n) > 0n
+  const canMint = isMounted && !!isConnected && !!address && chainId === arbitrum.id && !!tierAccessAddress
+  const hasSilver = isMounted && (silverBalance ?? 0n) > 0n
+  const hasGold = isMounted && (goldBalance ?? 0n) > 0n
   const canMintSilver = winStreak >= 2
   const canMintGold = winStreak >= 3
 
@@ -471,7 +471,9 @@ export function CoinFlip() {
               </span>
             </div>
             {!tierAccessAddress && <div className="text-sm text-white/85">Set NEXT_PUBLIC_TIER_ACCESS_CONTRACT to enable minting.</div>}
-            {!!tierAccessAddress && chainId !== arbitrum.id && <div className="text-sm text-white/85">Switch to Arbitrum to mint.</div>}
+            {!!tierAccessAddress && isMounted && chainId !== arbitrum.id && (
+              <div className="text-sm text-white/85">Switch to Arbitrum to mint.</div>
+            )}
             <div className="flex flex-wrap items-end justify-center gap-2.5 pt-10">
               {hasSilver ? (
                 <button
