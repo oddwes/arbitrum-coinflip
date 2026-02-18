@@ -71,14 +71,14 @@ body {
 
 .win-banner {
   position: fixed;
-  top: 18px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%) translateY(-10px);
+  transform: translate(-50%, -56%);
   z-index: 11;
   opacity: 0;
   pointer-events: none;
-  padding: 18px 26px;
-  border-radius: 18px;
+  padding: 24px 34px;
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(20, 26, 46, 0.55);
   backdrop-filter: blur(10px);
@@ -88,14 +88,14 @@ body {
 
 .win-banner.is-visible {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translate(-50%, -50%);
 }
 
 .win-banner span {
   display: inline-block;
   font-weight: 900;
-  font-size: 52px;
-  letter-spacing: 1.5px;
+  font-size: clamp(56px, 10vw, 108px);
+  letter-spacing: 2px;
   line-height: 1;
   background: linear-gradient(180deg, #fef08a 0%, #fbbf24 45%, #fb7185 100%);
   -webkit-background-clip: text;

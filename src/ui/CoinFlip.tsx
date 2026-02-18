@@ -3,7 +3,6 @@ import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteCont
 import { arbitrum } from 'wagmi/chains'
 
 type Side = 'heads' | 'tails'
-type Mode = 'free' | 'streak'
 type Rocket = { x: number; y: number; vx: number; vy: number; color: string; exploded: boolean }
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string }
 
@@ -44,7 +43,6 @@ export function CoinFlip() {
   const { address, isConnected, chainId } = useAccount()
   const [isFlipping, setIsFlipping] = React.useState(false)
   const [isMounted, setIsMounted] = React.useState(false)
-  const [mode, setMode] = React.useState<Mode>('free')
   const [winStreak, setWinStreak] = React.useState(0)
   const coinRef = React.useRef<HTMLDivElement | null>(null)
   const winRef = React.useRef<HTMLDivElement | null>(null)
@@ -53,6 +51,7 @@ export function CoinFlip() {
   const rotationRef = React.useRef(0)
   const flippingRef = React.useRef(false)
   const bannerTimeoutRef = React.useRef<number | null>(null)
+  const winAudioRef = React.useRef<HTMLAudioElement | null>(null)
   const [claimError, setClaimError] = React.useState<string | null>(null)
   const [claimSuccess, setClaimSuccess] = React.useState(false)
   const { writeContractAsync, data: hash, isPending: isMinting } = useWriteContract()
@@ -80,10 +79,15 @@ export function CoinFlip() {
   }, [])
 
   React.useEffect(() => {
+    winAudioRef.current = new Audio('/ding.m4a')
+  }, [])
+
+  React.useEffect(() => {
     if (!isConfirmed) return
     setClaimSuccess(true)
     setClaimError(null)
     setWinStreak(0)
+    startFireworksRef.current?.()
     void refetchSilverBalance()
     void refetchGoldBalance()
   }, [isConfirmed, refetchSilverBalance, refetchGoldBalance])
@@ -212,17 +216,22 @@ export function CoinFlip() {
     }
   }, [])
 
-  const showWinBannerOnly = () => {
-    const win = winRef.current
-    if (!win) return
-    win.classList.add('is-visible')
-    if (bannerTimeoutRef.current) {
-      window.clearTimeout(bannerTimeoutRef.current)
+  React.useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code !== 'Space') return
+      event.preventDefault()
+      startFireworksRef.current?.()
     }
-    bannerTimeoutRef.current = window.setTimeout(() => {
-      win.classList.remove('is-visible')
-      bannerTimeoutRef.current = null
-    }, 1100)
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  const playWinSound = () => {
+    const audio = winAudioRef.current
+    if (!audio) return
+    audio.currentTime = 0
+    void audio.play().catch(() => undefined)
   }
 
   const flip = (guess: Side) => {
@@ -233,7 +242,7 @@ export function CoinFlip() {
     flippingRef.current = true
     setIsFlipping(true)
 
-    const durationMs = 1500 + Math.random() * 500
+    const durationMs = 1000 + Math.random() * 250
     const result: Side = Math.random() < 0.5 ? 'heads' : 'tails'
     const spins = 3 + Math.floor(Math.random() * 2)
 
@@ -244,11 +253,15 @@ export function CoinFlip() {
 
     coin.classList.add('is-flipping')
     coin.style.transitionDuration = `${durationMs}ms`
+    coin.style.transitionTimingFunction = 'cubic-bezier(0.22, 0.9, 0.3, 1)'
     requestAnimationFrame(() => {
       coin.style.transform = `rotateY(${next}deg)`
     })
 
-    window.setTimeout(() => {
+    let settled = false
+    const settleFlip = () => {
+      if (settled) return
+      settled = true
       rotationRef.current = next
       coin.dataset.side = result
       coin.setAttribute('aria-label', `Coin result: ${result}`)
@@ -256,33 +269,32 @@ export function CoinFlip() {
       flippingRef.current = false
       setIsFlipping(false)
       if (result === guess) {
-        if (mode === 'free') {
-          startFireworksRef.current?.()
-        } else {
-          showWinBannerOnly()
-          setWinStreak((prev) => prev + 1)
-        }
-      } else if (mode === 'streak') {
+        playWinSound()
+        setWinStreak((prev) => prev + 1)
+      } else {
         setWinStreak(0)
       }
-    }, durationMs + 40)
-  }
-
-  const switchMode = (nextMode: Mode) => {
-    setMode(nextMode)
-    setWinStreak(0)
-    if (bannerTimeoutRef.current) {
-      window.clearTimeout(bannerTimeoutRef.current)
-      bannerTimeoutRef.current = null
     }
-    winRef.current?.classList.remove('is-visible')
+
+    const onTransitionEnd = (event: TransitionEvent) => {
+      if (event.target !== coin || event.propertyName !== 'transform') return
+      coin.removeEventListener('transitionend', onTransitionEnd)
+      window.clearTimeout(fallbackTimer)
+      settleFlip()
+    }
+
+    coin.addEventListener('transitionend', onTransitionEnd)
+    const fallbackTimer = window.setTimeout(() => {
+      coin.removeEventListener('transitionend', onTransitionEnd)
+      settleFlip()
+    }, durationMs + 120)
   }
 
   const canMint = !!isConnected && !!address && chainId === arbitrum.id && !!tierAccessAddress
   const hasSilver = (silverBalance ?? 0n) > 0n
   const hasGold = (goldBalance ?? 0n) > 0n
-  const canMintSilver = mode === 'streak' && winStreak >= 2
-  const canMintGold = mode === 'streak' && winStreak >= 3
+  const canMintSilver = winStreak >= 2
+  const canMintGold = winStreak >= 3
 
   const openSeaUrlFor = (tokenId: bigint) =>
     `https://opensea.io/assets/arbitrum/${tierAccessAddress}/${tokenId.toString()}`
@@ -306,25 +318,6 @@ export function CoinFlip() {
   return (
     <>
       <main className="page">
-        <div className="mode-switch">
-          <button
-            type="button"
-            className={mode === 'free' ? 'active' : ''}
-            onClick={() => switchMode('free')}
-            disabled={isFlipping}
-          >
-            Free Play
-          </button>
-          <button
-            type="button"
-            className={mode === 'streak' ? 'active' : ''}
-            onClick={() => switchMode('streak')}
-            disabled={isFlipping}
-          >
-            Play for Streak
-          </button>
-        </div>
-
         <div className="coin-scene">
           <div className="coin-shadow">
             <div
@@ -362,64 +355,62 @@ export function CoinFlip() {
           </button>
         </div>
 
-        {mode === 'streak' && (
-          <div className="streak-panel">
-            <div className="streak-display">Streak: <span>{winStreak}</span></div>
-            {!tierAccessAddress && <div>Set NEXT_PUBLIC_TIER_ACCESS_CONTRACT to enable minting.</div>}
-            {!!tierAccessAddress && chainId !== arbitrum.id && <div>Switch to Arbitrum to mint.</div>}
-            <div className="mint-actions">
-              {hasSilver ? (
-                <button
-                  type="button"
-                  onClick={() => window.open(openSeaUrlFor(SILVER_TOKEN_ID), '_blank', 'noopener,noreferrer')}
-                >
-                  View Silver on OpenSea
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => void mintTier(SILVER_TOKEN_ID)}
-                  disabled={!canMint || !canMintSilver || isMinting || isConfirming}
-                >
-                  Mint Silver (2 wins)
-                </button>
-              )}
-              {hasGold ? (
-                <button
-                  type="button"
-                  onClick={() => window.open(openSeaUrlFor(GOLD_TOKEN_ID), '_blank', 'noopener,noreferrer')}
-                >
-                  View Gold on OpenSea
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => void mintTier(GOLD_TOKEN_ID)}
-                  disabled={!canMint || !canMintGold || isMinting || isConfirming}
-                >
-                  Mint Gold (3 wins)
-                </button>
-              )}
-            </div>
-            {(isMinting || isConfirming || claimSuccess || claimError) && (
-              <div className="claim-status">
-                {isMinting && <div>Confirm claim in wallet...</div>}
-                {isConfirming && <div>Claim submitted. Waiting for confirmation...</div>}
-                {claimSuccess && !isMinting && !isConfirming && <div>Claimed!</div>}
-                {claimError && !isMinting && !isConfirming && <div>Claim failed. Try again.</div>}
-                {(isMinting || isConfirming) && (
-                  <div className="claim-progress">
-                    <div className="claim-progress-bar" />
-                  </div>
-                )}
-              </div>
+        <div className="streak-panel">
+          <div className="streak-display">Streak: <span>{winStreak}</span></div>
+          {!tierAccessAddress && <div>Set NEXT_PUBLIC_TIER_ACCESS_CONTRACT to enable minting.</div>}
+          {!!tierAccessAddress && chainId !== arbitrum.id && <div>Switch to Arbitrum to mint.</div>}
+          <div className="mint-actions">
+            {hasSilver ? (
+              <button
+                type="button"
+                onClick={() => window.open(openSeaUrlFor(SILVER_TOKEN_ID), '_blank', 'noopener,noreferrer')}
+              >
+                View Silver on OpenSea
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void mintTier(SILVER_TOKEN_ID)}
+                disabled={!canMint || !canMintSilver || isMinting || isConfirming}
+              >
+                Mint Silver (2 wins)
+              </button>
+            )}
+            {hasGold ? (
+              <button
+                type="button"
+                onClick={() => window.open(openSeaUrlFor(GOLD_TOKEN_ID), '_blank', 'noopener,noreferrer')}
+              >
+                View Gold on OpenSea
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void mintTier(GOLD_TOKEN_ID)}
+                disabled={!canMint || !canMintGold || isMinting || isConfirming}
+              >
+                Mint Gold (3 wins)
+              </button>
             )}
           </div>
-        )}
+          {(isMinting || isConfirming || claimSuccess || claimError) && (
+            <div className="claim-status">
+              {isMinting && <div>Confirm claim in wallet...</div>}
+              {isConfirming && <div>Claim submitted. Waiting for confirmation...</div>}
+              {claimSuccess && !isMinting && !isConfirming && <div>Claimed!</div>}
+              {claimError && !isMinting && !isConfirming && <div>Claim failed. Try again.</div>}
+              {(isMinting || isConfirming) && (
+                <div className="claim-progress">
+                  <div className="claim-progress-bar" />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </main>
 
       <div ref={winRef} className="win-banner" aria-hidden="true">
-        <span>WIN</span>
+        <span>CLAIMED!</span>
       </div>
       <canvas ref={fxRef} className="fx-canvas" aria-hidden="true" />
     </>
