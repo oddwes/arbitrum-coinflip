@@ -43,8 +43,10 @@ export function CoinFlip() {
   const { address, isConnected, chainId } = useAccount()
   const [isFlipping, setIsFlipping] = React.useState(false)
   const [isMounted, setIsMounted] = React.useState(false)
+  const [viewportScale, setViewportScale] = React.useState(1)
   const [winStreak, setWinStreak] = React.useState(0)
   const [showWinBanner, setShowWinBanner] = React.useState(false)
+  const stageRef = React.useRef<HTMLDivElement | null>(null)
   const coinRef = React.useRef<HTMLDivElement | null>(null)
   const winRef = React.useRef<HTMLDivElement | null>(null)
   const fxRef = React.useRef<HTMLCanvasElement | null>(null)
@@ -77,6 +79,36 @@ export function CoinFlip() {
 
   React.useEffect(() => {
     setIsMounted(true)
+  }, [])
+
+  React.useEffect(() => {
+    const stage = stageRef.current
+    if (!stage) return
+
+    let frame = 0
+    const updateScale = () => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
+        const w = stage.scrollWidth
+        const h = stage.scrollHeight
+        if (!w || !h) return
+        const maxW = Math.max(240, window.innerWidth - 24)
+        const maxH = Math.max(240, window.innerHeight - 24)
+        const next = Math.min(1, maxW / w, maxH / h)
+        setViewportScale((prev) => (Math.abs(prev - next) < 0.01 ? prev : next))
+      })
+    }
+
+    updateScale()
+    const observer = new ResizeObserver(updateScale)
+    observer.observe(stage)
+    window.addEventListener('resize', updateScale)
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', updateScale)
+      window.cancelAnimationFrame(frame)
+    }
   }, [])
 
   React.useEffect(() => {
@@ -239,6 +271,35 @@ export function CoinFlip() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
+  React.useEffect(() => {
+    const stage = stageRef.current
+    if (!stage) return
+
+    let lastTapAt = 0
+    let lastTapX = 0
+    let lastTapY = 0
+
+    const onTouchEnd = (event: TouchEvent) => {
+      const touch = event.changedTouches[0]
+      if (!touch) return
+
+      const now = Date.now()
+      const isNearLastTap = Math.hypot(touch.clientX - lastTapX, touch.clientY - lastTapY) < 40
+      if (now - lastTapAt < 300 && isNearLastTap) {
+        startFireworksRef.current?.()
+        lastTapAt = 0
+        return
+      }
+
+      lastTapAt = now
+      lastTapX = touch.clientX
+      lastTapY = touch.clientY
+    }
+
+    stage.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => stage.removeEventListener('touchend', onTouchEnd)
+  }, [])
+
   const playWinSound = () => {
     const audio = winAudioRef.current
     if (!audio) return
@@ -338,105 +399,109 @@ export function CoinFlip() {
 
   return (
     <>
-      <main className="grid content-center justify-items-center gap-4">
-        <div className="coin-scene">
-          <div className="coin-shadow">
-            <div
-              ref={coinRef}
-              className="coin"
-              data-side="heads"
-              aria-label="Coin result: heads"
-              style={{ transform: 'rotateY(0deg)' }}
-            >
-              <div className="face front">
-                <img src={headsUrl} alt="Heads" draggable={false} />
-              </div>
-              <div className="face back">
-                <img src={tailsUrl} alt="Tails" draggable={false} />
+      <main className="coinflip-shell">
+        <div ref={stageRef} className="coinflip-stage" style={{ transform: `scale(${viewportScale})` }}>
+          <div className="grid content-center justify-items-center gap-4">
+            <div className="coin-scene">
+              <div className="coin-shadow">
+                <div
+                  ref={coinRef}
+                  className="coin"
+                  data-side="heads"
+                  aria-label="Coin result: heads"
+                  style={{ transform: 'rotateY(0deg)' }}
+                >
+                  <div className="face front">
+                    <img src={headsUrl} alt="Heads" draggable={false} />
+                  </div>
+                  <div className="face back">
+                    <img src={tailsUrl} alt="Tails" draggable={false} />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => flip('heads')}
-            disabled={!isMounted || !isConnected || isFlipping}
-            className="min-w-[140px] rounded-xl border border-blue-300/60 bg-gradient-to-b from-blue-500/95 to-blue-600/90 px-5 py-3.5 text-base font-semibold tracking-wide text-white transition hover:border-blue-200/80 disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
-          >
-            Heads
-          </button>
-          <button
-            type="button"
-            onClick={() => flip('tails')}
-            disabled={!isMounted || !isConnected || isFlipping}
-            className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
-          >
-            Tails
-          </button>
-        </div>
-
-        <div className="grid justify-items-center gap-2 text-center">
-          <div className="inline-flex items-center rounded-full border border-amber-300/50 bg-gradient-to-b from-amber-900/60 to-amber-950/80 px-4 py-2 text-sm font-bold tracking-[0.08em] text-amber-200 uppercase shadow-[inset_0_0_16px_rgba(251,191,36,0.2),0_0_22px_rgba(251,191,36,0.24)]">
-            Streak:
-            <span className="ml-2 text-2xl leading-none font-black tracking-[0.04em] text-amber-50 [text-shadow:0_0_8px_rgba(251,191,36,0.8),0_0_18px_rgba(251,191,36,0.45)]">
-              {winStreak}
-            </span>
-          </div>
-          {!tierAccessAddress && <div className="text-sm text-white/85">Set NEXT_PUBLIC_TIER_ACCESS_CONTRACT to enable minting.</div>}
-          {!!tierAccessAddress && chainId !== arbitrum.id && <div className="text-sm text-white/85">Switch to Arbitrum to mint.</div>}
-          <div className="flex flex-wrap items-end justify-center gap-2.5 pt-10">
-            {hasSilver ? (
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => window.open(openSeaUrlFor(SILVER_TOKEN_ID), '_blank', 'noopener,noreferrer')}
-                className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
+                onClick={() => flip('heads')}
+                disabled={!isMounted || !isConnected || isFlipping}
+                className="min-w-[140px] rounded-xl border border-blue-300/60 bg-gradient-to-b from-blue-500/95 to-blue-600/90 px-5 py-3.5 text-base font-semibold tracking-wide text-white transition hover:border-blue-200/80 disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
               >
-                View Silver on OpenSea
+                Heads
               </button>
-            ) : (
               <button
                 type="button"
-                onClick={() => void mintTier(SILVER_TOKEN_ID)}
-                disabled={!canMint || !canMintSilver || isMinting || isConfirming}
+                onClick={() => flip('tails')}
+                disabled={!isMounted || !isConnected || isFlipping}
                 className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
               >
-                Mint Silver (2 wins)
+                Tails
               </button>
-            )}
-            {hasGold ? (
-              <button
-                type="button"
-                onClick={() => window.open(openSeaUrlFor(GOLD_TOKEN_ID), '_blank', 'noopener,noreferrer')}
-                className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
-              >
-                View Gold on OpenSea
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void mintTier(GOLD_TOKEN_ID)}
-                disabled={!canMint || !canMintGold || isMinting || isConfirming}
-                className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
-              >
-                Mint Gold (3 wins)
-              </button>
-            )}
+            </div>
           </div>
-          {(isMinting || isConfirming || claimSuccess || claimError) && (
-            <div className="grid w-[min(420px,90vw)] gap-2">
-              {isMinting && <div className="text-sm text-white/90">Confirm claim in wallet...</div>}
-              {isConfirming && <div className="text-sm text-white/90">Claim submitted. Waiting for confirmation...</div>}
-              {claimSuccess && !isMinting && !isConfirming && <div className="text-sm text-emerald-300">Claimed!</div>}
-              {claimError && !isMinting && !isConfirming && <div className="text-sm text-rose-300">Claim failed. Try again.</div>}
-              {(isMinting || isConfirming) && (
-                <div className="h-2 w-full overflow-hidden rounded-full bg-white/15">
-                  <div className="claim-progress-bar h-full w-[45%] rounded-full bg-gradient-to-r from-blue-400 to-amber-400" />
-                </div>
+
+          <div className="grid justify-items-center gap-2 text-center pt-4">
+            <div className="inline-flex items-center rounded-full border border-amber-300/50 bg-gradient-to-b from-amber-900/60 to-amber-950/80 px-4 py-2 text-sm font-bold tracking-[0.08em] text-amber-200 uppercase shadow-[inset_0_0_16px_rgba(251,191,36,0.2),0_0_22px_rgba(251,191,36,0.24)]">
+              Streak:
+              <span className="ml-2 text-2xl leading-none font-black tracking-[0.04em] text-amber-50 [text-shadow:0_0_8px_rgba(251,191,36,0.8),0_0_18px_rgba(251,191,36,0.45)]">
+                {winStreak}
+              </span>
+            </div>
+            {!tierAccessAddress && <div className="text-sm text-white/85">Set NEXT_PUBLIC_TIER_ACCESS_CONTRACT to enable minting.</div>}
+            {!!tierAccessAddress && chainId !== arbitrum.id && <div className="text-sm text-white/85">Switch to Arbitrum to mint.</div>}
+            <div className="flex flex-wrap items-end justify-center gap-2.5 pt-10">
+              {hasSilver ? (
+                <button
+                  type="button"
+                  onClick={() => window.open(openSeaUrlFor(SILVER_TOKEN_ID), '_blank', 'noopener,noreferrer')}
+                  className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
+                >
+                  View Silver on OpenSea
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void mintTier(SILVER_TOKEN_ID)}
+                  disabled={!canMint || !canMintSilver || isMinting || isConfirming}
+                  className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
+                >
+                  Mint Silver (2 wins)
+                </button>
+              )}
+              {hasGold ? (
+                <button
+                  type="button"
+                  onClick={() => window.open(openSeaUrlFor(GOLD_TOKEN_ID), '_blank', 'noopener,noreferrer')}
+                  className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
+                >
+                  View Gold on OpenSea
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void mintTier(GOLD_TOKEN_ID)}
+                  disabled={!canMint || !canMintGold || isMinting || isConfirming}
+                  className="min-w-[140px] rounded-xl border border-white/15 bg-slate-900/65 px-5 py-3.5 text-base font-semibold tracking-wide text-white/90 transition hover:border-white/30 disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-2"
+                >
+                  Mint Gold (3 wins)
+                </button>
               )}
             </div>
-          )}
+            {(isMinting || isConfirming || claimSuccess || claimError) && (
+              <div className="grid w-[min(420px,90vw)] gap-2">
+                {isMinting && <div className="text-sm text-white/90">Confirm claim in wallet...</div>}
+                {isConfirming && <div className="text-sm text-white/90">Claim submitted. Waiting for confirmation...</div>}
+                {claimSuccess && !isMinting && !isConfirming && <div className="text-sm text-emerald-300">Claimed!</div>}
+                {claimError && !isMinting && !isConfirming && <div className="text-sm text-rose-300">Claim failed. Try again.</div>}
+                {(isMinting || isConfirming) && (
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-white/15">
+                    <div className="claim-progress-bar h-full w-[45%] rounded-full bg-gradient-to-r from-blue-400 to-amber-400" />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </main>
 

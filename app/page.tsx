@@ -4,7 +4,7 @@ import { Providers } from './providers'
 export default function Page() {
   return (
     <Providers>
-      <div id="app" className="w-[min(680px,92vw)] px-4 pt-6 pb-10">
+      <div id="app" className="w-screen min-h-screen">
         <App />
       </div>
     </Providers>
