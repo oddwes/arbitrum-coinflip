@@ -139,10 +139,25 @@ export function CoinFlip() {
     let fxStart = 0
     let lastSpawn = 0
 
+    const getViewport = () => {
+      const vv = window.visualViewport
+      return {
+        width: vv?.width ?? window.innerWidth,
+        height: vv?.height ?? window.innerHeight,
+        offsetLeft: vv?.offsetLeft ?? 0,
+        offsetTop: vv?.offsetTop ?? 0,
+      }
+    }
+
     const resizeFx = () => {
+      const viewport = getViewport()
       const dpr = Math.min(2, window.devicePixelRatio || 1)
-      fx.width = Math.floor(window.innerWidth * dpr)
-      fx.height = Math.floor(window.innerHeight * dpr)
+      fx.style.width = `${viewport.width}px`
+      fx.style.height = `${viewport.height}px`
+      fx.style.left = `${viewport.offsetLeft}px`
+      fx.style.top = `${viewport.offsetTop}px`
+      fx.width = Math.floor(viewport.width * dpr)
+      fx.height = Math.floor(viewport.height * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
 
@@ -165,15 +180,18 @@ export function CoinFlip() {
     const tickFx = (now: number) => {
       if (!fxActive) return
 
+      const viewport = getViewport()
+      const vw = viewport.width
+      const vh = viewport.height
       const elapsed = now - fxStart
       if (elapsed < 820 && now - lastSpawn > 70) {
         lastSpawn = now
         const count = 1 + (Math.random() < 0.35 ? 1 : 0)
         for (let i = 0; i < count; i++) {
-          const x = window.innerWidth * (0.18 + Math.random() * 0.64)
+          const x = vw * (0.18 + Math.random() * 0.64)
           rockets.push({
             x,
-            y: window.innerHeight + 10,
+            y: vh + 10,
             vx: (Math.random() - 0.5) * 0.75,
             vy: -(7.0 + Math.random() * 3.2),
             color: colors[Math.floor(Math.random() * colors.length)]!,
@@ -184,7 +202,7 @@ export function CoinFlip() {
 
       ctx.globalCompositeOperation = 'source-over'
       ctx.fillStyle = 'rgba(0,0,0,0.14)'
-      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight)
+      ctx.fillRect(0, 0, vw, vh)
 
       ctx.globalCompositeOperation = 'lighter'
 
@@ -194,12 +212,12 @@ export function CoinFlip() {
         r.vy += 0.06
         ctx.fillStyle = r.color
         ctx.fillRect(r.x - 1, r.y - 1, 2, 2)
-        if (!r.exploded && (r.vy > -1.5 || r.y < window.innerHeight * 0.28)) {
+        if (!r.exploded && (r.vy > -1.5 || r.y < vh * 0.28)) {
           r.exploded = true
           explode(r)
         }
       }
-      rockets = rockets.filter((r) => !r.exploded && r.y < window.innerHeight + 40)
+      rockets = rockets.filter((r) => !r.exploded && r.y < vh + 40)
 
       for (const p of particles) {
         p.x += p.vx
@@ -218,7 +236,7 @@ export function CoinFlip() {
 
       if (elapsed > 1900 && rockets.length === 0 && particles.length === 0) {
         fxActive = false
-        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
+        ctx.clearRect(0, 0, vw, vh)
         win.classList.remove('is-visible')
         return
       }
@@ -239,12 +257,16 @@ export function CoinFlip() {
     startFireworksRef.current = startFireworks
     resizeFx()
     window.addEventListener('resize', resizeFx)
+    window.visualViewport?.addEventListener('resize', resizeFx)
+    window.visualViewport?.addEventListener('scroll', resizeFx)
 
     return () => {
       if (bannerTimeoutRef.current) {
         window.clearTimeout(bannerTimeoutRef.current)
       }
       window.removeEventListener('resize', resizeFx)
+      window.visualViewport?.removeEventListener('resize', resizeFx)
+      window.visualViewport?.removeEventListener('scroll', resizeFx)
       startFireworksRef.current = null
     }
   }, [])
