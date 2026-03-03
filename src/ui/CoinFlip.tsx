@@ -40,7 +40,8 @@ const tierAccessAddress = process.env.NEXT_PUBLIC_TIER_ACCESS_CONTRACT as `0x${s
 const zeroAddress = '0x0000000000000000000000000000000000000000' as const
 
 export function CoinFlip() {
-  const { address, isConnected, chainId } = useAccount()
+  const { address, status, chainId } = useAccount()
+  const isConnected = status === 'connected' && !!address
   const [isFlipping, setIsFlipping] = React.useState(false)
   const [isMounted, setIsMounted] = React.useState(false)
   const [viewportScale, setViewportScale] = React.useState(1)
